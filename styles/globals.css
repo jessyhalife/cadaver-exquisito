@@ -1,16 +1,10 @@
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-}
+/* purgecss start ignore */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+/* purgecss end ignore */
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+@import "tailwindcss/utilities";
 
-* {
-  box-sizing: border-box;
+.debug * {
+  box-shadow: 0 0 1px red;
 }
