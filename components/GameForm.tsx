@@ -1,60 +1,90 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { useCollection } from "@nandorojo/swr-firestore";
+import { useDocument } from "@nandorojo/swr-firestore";
 import { Game } from "../types/Game";
-import { useLocalStorage } from "../hooks/useLocalStorage";
+
+import hash from "object-hash";
 
 const GameForm = () => {
   const router = useRouter();
-  const { add } = useCollection<Game>("games");
+  const [nickname, setNickname] = useState("");
   const [message, setMessage] = useState("");
   const [formData, setFormData] = useState({
     slug: "",
     description: "",
     passcode: "",
-    duration: 3,
+    duration: 30,
     maxPlayers: 5,
-    rounds: 2,
+    rounds: 3,
     status: "created" as const,
     createdBy: "",
-    players: [{ id: "jes", nickname: "jessyhalife" }],
+    players: [],
     content: [],
     createdAt: new Date(),
   });
-  const [games, setGame] = useLocalStorage("games", "");
-
+  const [id, setId] = useState(hash(new Date().toLocaleString()));
+  const { set, data } = useDocument<Game>(`games/${id}`);
+  const [isProcessing, setProcessing] = useState(false);
+  const cleanSlug = (slug: string) => {
+    return slug.replace(/[^a-zA-Z0-9-_]/g, "-");
+  };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (data.exists) setMessage("Ese código ya existe, elegí otro!");
     try {
-      await add(formData);
-      setGame(formData.slug);
-      router.push(`console/${formData.slug}`);
+      setProcessing(true);
+      await set(
+        { ...formData, players: [...formData.players, nickname] },
+        { merge: true }
+      );
+      setProcessing(false);
+      router.push(`room/${id}`);
     } catch (error) {
       console.log(error);
       setMessage(error.message);
+      setProcessing(false);
     }
   };
 
   return (
-    <div className="text-center">
-      <h1 className="text-2xl font-bold p-4">Customize game</h1>
-      <div className="container">
+    <>
+      <h1 className="text-4xl font-bold p-4 text-center">Configurar juego</h1>
+      <div className="flex bordered shadow border-gray-300 flex-col lg:ml-12 md:ml-6 items-center">
         <form onSubmit={submit}>
-          <fieldset className="flex">
+          <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Acceso a sala
+              <div className="text-xs text-gray-600 mt-1 mb-2 font-normal">
+                Esta será la dirección donde van a ingresar tus amigos.
+                <br />
+                <b>
+                  https://cadaver-exquisito.now.sh/<i>el-código-que-ingreses</i>
+                </b>
+              </div>
+            </label>
+
             <input
+              className="appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
               type="text"
               name="slug"
               id="slug"
-              placeholder="name"
-              value={formData.slug}
+              placeholder="url"
+              value={id}
               onChange={({ target }) => {
                 setFormData({
                   ...formData,
-                  slug: target.value,
+                  slug: cleanSlug(target.value),
                 });
+                setId(cleanSlug(target.value));
               }}
             />
+          </div>
+          <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Descripción
+            </label>
             <input
+              className="appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
               type="text"
               name="description"
               id="description"
@@ -67,7 +97,17 @@ const GameForm = () => {
                 });
               }}
             />
+          </div>
+          <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
+            <label className="block text-gray-700 text-sm font-bold ">
+              Código de acceso a sala
+              <div className="text-xs text-gray-600 mt-1 mb-2 font-normal">
+                opcional! para que sólo tus amigos puedan ingresar
+              </div>
+            </label>
+
             <input
+              className="appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
               type="password"
               name="passcode"
               id="passcode"
@@ -80,7 +120,13 @@ const GameForm = () => {
                 });
               }}
             />
+          </div>
+          <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Duración de turno (segundos)
+            </label>
             <input
+              className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
               type="number"
               name="duration"
               id="duration"
@@ -93,7 +139,13 @@ const GameForm = () => {
                 });
               }}
             />
+          </div>
+          <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Máxima cantidad de jugadores
+            </label>
             <input
+              className="appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
               type="number"
               name="maxPlayers"
               id="maxPlayers"
@@ -106,7 +158,13 @@ const GameForm = () => {
                 });
               }}
             />
+          </div>
+          <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Número de rondas
+            </label>
             <input
+              className="appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
               type="number"
               name="rounds"
               id="rounds"
@@ -119,14 +177,37 @@ const GameForm = () => {
                 });
               }}
             />
-          </fieldset>
+          </div>
+          <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Tu nombre de usuario
+            </label>
+            <input
+              className="appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+              type="text"
+              name="nickname"
+              id="nickname"
+              placeholder="nickname"
+              value={nickname}
+              onChange={({ target }) => {
+                setNickname(target.value);
+              }}
+            />
+          </div>
+
           <div className="text-red-700">{message}</div>
-          <button className="bg-blue-500 p-2 text-white rounded shadow text-bold">
-            Create
-          </button>
+
+          <div className="text-center mt-10 mb-5">
+            <button
+              disabled={isProcessing}
+              className="bg-orange-500 p-2 text-white rounded shadow text-bold disabled:opacity-50"
+            >
+              Crear sala
+            </button>
+          </div>
         </form>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -6,34 +6,49 @@ type Props = {
   slug: string;
 };
 const GameConsole = ({ slug }: Props) => {
-  const { set, data, loading } = useDocument<Game>("games", {
-    listen: true,
-  });
-  const openGame = (event: FormEvent) => {
+  const { set, data, error, loading } = useDocument<Game>(
+    slug && `games/${slug}`
+  );
+
+  const openGame = async (event: FormEvent) => {
     event.preventDefault();
-    data[0].status = "joining";
-    data[0].description = "CAMBIAN2";
-    console.log(data[0]);
-    set(data[0], { merge: true })
-      .then((doc) => console.log(doc))
-      .catch((err) => console.log(err));
+    data.status = "joining";
+    try {
+      await set(data, { merge: true });
+    } catch (error) {
+      console.log(error);
+    }
   };
+
   if (loading) return <h1>loading..</h1>;
-  if (!loading && data && data[0]) {
+
+  if (!loading && data && data) {
     return (
       <div className="text-center">
-        <div className="text-2xl">Welcome to {data[0].description}</div>
-        <div className="text-xl">
-          Allow players to join by sharing link and click "Open room"
+        <div className="text-2xl">
+          Bienvenido a la sala de {data.description}
         </div>
-        <div className="bg-blue-200">{data[0].status}</div>
-        <button
-          type="submit"
-          onClick={openGame}
-          className="bg-orange-500 rounded m-2 shadow p-2"
-        >
-          Open room
-        </button>
+        <div className="text-xl">
+          Permite que los jugadores se unan haciendo click en `Abrir sala`
+        </div>
+        <div className="bg-blue-200">{data.status}</div>
+        {data.status === "created" ? (
+          <button
+            type="submit"
+            onClick={openGame}
+            className="bg-orange-500 rounded m-2 shadow p-2"
+          >
+            Abrir sala
+          </button>
+        ) : (
+          <button
+            type="submit"
+            onClick={openGame}
+            className="bg-orange-500 rounded m-2 shadow p-2"
+          >
+            Comenzar juego
+          </button>
+        )}
       </div>
     );
   }

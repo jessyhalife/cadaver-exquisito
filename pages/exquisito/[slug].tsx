@@ -1,22 +1,37 @@
-import React from "react";
+import React, { useState, FormEvent } from "react";
 import { useRouter } from "next/router";
 import { Game } from "../../types/Game";
-import { useCollection } from "@nandorojo/swr-firestore";
+import { useDocument, useCollection } from "@nandorojo/swr-firestore";
+import JoinGame from "../../components/JoinGame";
 
 const Slug = () => {
   const router = useRouter();
   const { slug } = router.query;
-  const { loading, data } = useCollection<Game>("games", {
-    listen: true,
-    where: ["slug", "==", slug],
-  });
-  if (loading) return <h1>loading...</h1>;
-  if (!data || data.length === 0) return <h1>not found</h1>;
-  console.log(data[0].status);
-  if (data[0].status !== "joining")
-    return <h1>Oops, too early, or too late</h1>;
+  const { data, set, error, loading } = useDocument<Game>(
+    slug && `games/${slug}`,
+    {
+      listen: true,
+    }
+  );
 
-  return <h1>{data[0].description}</h1>;
+  const joinRoom = async (event: FormEvent, nickname: string) => {
+    event.preventDefault();
+    try {
+      let toSave = {
+        ...data,
+        players: [...data.players, { id: nickname, nickname: nickname }],
+      };
+      await set(toSave);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  if (!slug || loading) return <h1>loading</h1>;
+
+  if (!loading && slug && !data) router.push("/");
+
+  if (data) return <JoinGame game={data} joinRoom={joinRoom} />;
 };
 
 export default Slug;
