@@ -5,6 +5,7 @@ import { useDocument, useCollection } from "@nandorojo/swr-firestore";
 import JoinGame from "../../components/JoinGame";
 import { useSessionStorage } from "../../hooks/useSessionStorage";
 import GamePlay from "../../components/GamePlay";
+import { Game } from "../../types/Game";
 
 const Slug = () => {
   const [value, setValue] = useSessionStorage("cadaver-nickname", "");

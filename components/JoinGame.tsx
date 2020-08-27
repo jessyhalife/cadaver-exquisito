@@ -2,7 +2,7 @@ import react, { useState, FormEvent } from "react";
 import { useCollection, useDocument } from "@nandorojo/swr-firestore";
 import { useRouter } from "next/router";
 import { Game } from "../types/Game";
-import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useSessionStorage } from "../hooks/useSessionStorage";
 
 type Props = {
   game: Game;
