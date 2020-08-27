@@ -4,14 +4,17 @@ import { useDocument } from "@nandorojo/swr-firestore";
 import { Game } from "../types/Game";
 
 import hash from "object-hash";
+import { useSessionStorage } from "../hooks/useSessionStorage";
+import randomWords from "random-spanish-words";
 
 const GameForm = () => {
   const router = useRouter();
-  const [nickname, setNickname] = useState("");
   const [message, setMessage] = useState("");
+  const [value, setValue] = useSessionStorage("cadaver-nickname", "");
+  const [nickname, setNickname] = useState(value || "");
   const [formData, setFormData] = useState({
     slug: "",
-    description: "",
+    description: randomWords(5).join(" "),
     passcode: "",
     duration: 30,
     maxPlayers: 5,
@@ -28,15 +31,18 @@ const GameForm = () => {
   const cleanSlug = (slug: string) => {
     return slug.replace(/[^a-zA-Z0-9-_]/g, "-");
   };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (data.exists) setMessage("Ese código ya existe, elegí otro!");
     try {
       setProcessing(true);
+
       await set(
-        { ...formData, players: [...formData.players, nickname] },
+        { ...formData, slug: id, players: [...formData.players, { nickname }] },
         { merge: true }
       );
+      setValue(nickname);
       setProcessing(false);
       router.push(`room/${id}`);
     } catch (error) {
@@ -49,7 +55,7 @@ const GameForm = () => {
   return (
     <>
       <h1 className="text-4xl font-bold p-4 text-center">Configurar juego</h1>
-      <div className="flex bordered shadow border-gray-300 flex-col lg:ml-12 md:ml-6 items-center">
+      <div className="flex flex-col lg:ml-12 md:ml-6 items-center">
         <form onSubmit={submit}>
           <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
             <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -58,7 +64,8 @@ const GameForm = () => {
                 Esta será la dirección donde van a ingresar tus amigos.
                 <br />
                 <b>
-                  https://cadaver-exquisito.now.sh/<i>el-código-que-ingreses</i>
+                  https://cadaver-exquisito.now.sh/exquisito/
+                  <i>el-código-que-ingreses</i>
                 </b>
               </div>
             </label>
@@ -84,7 +91,7 @@ const GameForm = () => {
               Descripción
             </label>
             <input
-              className="appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+              className="capitalize appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
               type="text"
               name="description"
               id="description"
@@ -98,7 +105,7 @@ const GameForm = () => {
               }}
             />
           </div>
-          <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
+          {/* <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
             <label className="block text-gray-700 text-sm font-bold ">
               Código de acceso a sala
               <div className="text-xs text-gray-600 mt-1 mb-2 font-normal">
@@ -120,7 +127,7 @@ const GameForm = () => {
                 });
               }}
             />
-          </div>
+          </div> */}
           <div className="w-full max-w-lg mt-4  px-3 mb-6 md:mb-0">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Duración de turno (segundos)

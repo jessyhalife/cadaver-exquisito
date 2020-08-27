@@ -17,11 +17,12 @@ const PlayersList = ({ slug }: Props) => {
   if (data) console.log(data);
   return (
     <>
-      <h1>Jugadores:</h1>
-      <ul>
+      <h1 className="text-2xl font-bold">Jugadores:</h1>
+      <div className="text-sm font-semibold">Restantes: {data[0].maxPlayers - data[0].players.length}</div>
+      <ul className="text-left text-gray-800 font-semibold">
         {data &&
           data[0]?.players.map((p) => (
-            <li key={hash(p)}>{p}</li>
+            <li key={hash(p.nickname)}>{p.nickname}</li>
           ))}
       </ul>
     </>

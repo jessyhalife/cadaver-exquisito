@@ -21,3 +21,9 @@ export type Game = {
     players: Player[]
     content: Content[]
 }
+
+export type Partida = {
+    gameID: string
+    round: number
+    player: number
+}

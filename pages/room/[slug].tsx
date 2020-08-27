@@ -13,8 +13,9 @@ const Console = () => {
         <h1>Cargado sala... </h1>
       ) : (
         <div className="text-center">
-          <GameConsole slug={slug as string} />
-          <PlayersList slug={slug as string} />
+          <GameConsole slug={slug as string}>
+            <PlayersList slug={slug as string} />
+          </GameConsole>
         </div>
       )}
     </>
